@@ -3,7 +3,7 @@ import { DeepSeekService } from './services/deepseek';
 import { ChatRequest, ChatResponse, ErrorResponse } from './types';
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env): Promise<Response> {
     const { method } = request;
     const url = new URL(request.url);
     const pathname = url.pathname;
