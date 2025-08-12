@@ -1,0 +1,30 @@
+{
+  "name": "chat-service",
+  "version": "1.0.0",
+  "description": "智能聊天后端服务 - 基于Cloudflare Workers",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "wrangler build",
+    "preview": "wrangler preview",
+    "tail": "wrangler tail"
+  },
+  "keywords": [
+    "cloudflare-workers",
+    "typescript",
+    "deepseek",
+    "chat",
+    "ai"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241011.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "@cloudflare/itty-router": "^4.0.25"
+  }
+}
