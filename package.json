@@ -15,7 +15,9 @@
     "typescript",
     "deepseek",
     "chat",
-    "ai"
+    "ai",
+    "graphql",
+    "apollo-server"
   ],
   "author": "Your Name",
   "license": "MIT",
@@ -23,5 +25,11 @@
     "@cloudflare/workers-types": "^4.20241011.0",
     "typescript": "^5.0.0",
     "wrangler": "^4.28.1"
+  },
+  "dependencies": {
+    "graphql": "^16.8.1",
+    "@apollo/server": "^4.10.0",
+    "@as-integrations/cloudflare-workers": "^1.2.0",
+    "@graphql-tools/schema": "^10.0.2"
   }
 }
