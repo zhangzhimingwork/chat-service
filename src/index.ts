@@ -1,7 +1,7 @@
 import { corsHeaders, handleCORS } from './middleware/cors';
 import { DeepSeekService } from './services/deepseek';
 import { ChatRequest, ChatResponse, ErrorResponse } from './types';
-import { graphqlHandler } from './graphql/server';
+import { handleGraphQLRequest } from './graphql/server';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -15,14 +15,14 @@ export default {
     }
 
     try {
-      // Apollo Server GraphQL 端点
+      // GraphQL 端点 - 使用 GraphQL Yoga
       if (pathname === '/graphql' || pathname.startsWith('/graphql')) {
         console.log(`🔧 Handling GraphQL request: ${method} ${pathname}`);
         
-        // 使用 Apollo Server 处理 GraphQL 请求
-        const response = await graphqlHandler(request, env);
+        // 使用 GraphQL Yoga 处理 GraphQL 请求
+        const response = await handleGraphQLRequest(request, env);
         
-        // 添加 CORS 头部到 Apollo Server 响应
+        // 添加 CORS 头部
         const newHeaders = new Headers(response.headers);
         Object.entries(corsHeaders).forEach(([key, value]) => {
           newHeaders.set(key, value);
@@ -38,7 +38,7 @@ export default {
       // 健康检查
       if (method === 'GET' && pathname === '/') {
         return new Response(JSON.stringify({
-          message: 'Chat Service API is running with Apollo Server GraphQL support',
+          message: 'Chat Service API is running with GraphQL Yoga support',
           version: '1.0.0',
           timestamp: new Date().toISOString(),
           endpoints: {
@@ -49,11 +49,11 @@ export default {
             graphql: {
               endpoint: '/graphql',
               playground: '/graphql (开发环境)',
-              description: 'Apollo Server GraphQL API'
+              description: 'GraphQL Yoga API with Enterprise Features'
             }
           },
           features: [
-            'Apollo Server GraphQL',
+            'GraphQL Yoga Server',
             'DeepSeek AI Integration',
             'TypeScript Support',
             'CORS Enabled',
