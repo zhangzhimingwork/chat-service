@@ -1,159 +1,514 @@
 # Chat Service
 
-智能聊天后端服务 - 基于 Cloudflare Workers 和 DeepSeek API
+智能聊天后端服务 - 基于 Cloudflare Workers，集成 DeepSeek API 和GraphQL
 
 ## 功能特性
 
 - 🚀 基于 Cloudflare Workers 的无服务器架构
 - 🤖 集成 DeepSeek AI 模型
-- 🔒 CORS 跨域支持
-- 📝 TypeScript 类型安全
-- ⚡ 快速响应和全球分发
-- 🛡️ 错误处理和输入验证
+- 🌐 支持 REST API 和GraphQL API
+- 📱 完整的 CORS 支持
+- 🔒 TypeScript 类型安全
+- 📊 GraphQL Playground 支持
 
-## API 接口
+## API 端点
 
-### 1. 健康检查
-```
-GET /
-```
+### REST API
 
-### 2. 聊天接口
-```
-POST /api/chat
-Content-Type: application/json
+- `GET /` - 健康检查和API信息
+- `POST /api/chat` - 发送聊天消息
+- `GET /api/conversations/:id` - 获取对话历史
 
-{
-  "message": "你好",
-  "conversationId": "optional-conversation-id",
-  "systemPrompt": "可选的系统提示词"
+### GraphQL API
+
+- `POST /graphql` - GraphQL 端点
+- `GET /graphql` - GraphQL Playground（开发环境）
+
+## GraphQL Schema
+
+### 查询 (Queries)
+
+```graphql
+# 健康检查
+query {
+  health {
+    status
+    version
+    timestamp
+    service
+  }
 }
-```
 
-响应：
-```json
-{
-  "message": "你好！有什么我可以帮助你的吗？",
-  "conversationId": "conv_1234567890_abc123",
-  "timestamp": "2025-08-12T10:30:00.000Z",
-  "model": "deepseek-chat",
-  "usage": {
-    "prompt_tokens": 10,
-    "completion_tokens": 20,
-    "total_tokens": 30
+# 获取对话
+query {
+  conversation(id: "conv_123") {
+    id
+    title
+    messages {
+      id
+      content
+      role
+      timestamp
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+# 获取对话列表
+query {
+  conversations(limit: 10, offset: 0) {
+    nodes {
+      id
+      title
+      createdAt
+    }
+    totalCount
+    hasNextPage
   }
 }
 ```
 
-### 3. 获取对话历史
-```
-GET /api/conversations/{conversationId}
+### 变更 (Mutations)
+
+```graphql
+# 发送消息
+mutation {
+  sendMessage(input: {
+    message: "你好，请介绍一下你自己"
+    conversationId: "conv_123"
+    systemPrompt: "你是一个有帮助的AI助手"
+  }) {
+    message
+    conversationId
+    timestamp
+    model
+    usage {
+      promptTokens
+      completionTokens
+      totalTokens
+    }
+    conversation {
+      id
+      title
+      messages {
+        content
+        role
+        timestamp
+      }
+    }
+  }
+}
+
+# 创建对话
+mutation {
+  createConversation(input: {
+    title: "我的新对话"
+    systemPrompt: "你是一个专业的编程助手"
+  }) {
+    id
+    title
+    createdAt
+  }
+}
+
+# 删除对话
+mutation {
+  deleteConversation(id: "conv_123")
+}
 ```
 
-## 开发环境设置
+## 快速开始
 
-### 前提条件
+### 环境要求
+
 - Node.js 18+
+- npm 或 yarn
 - Cloudflare Workers 账户
-- DeepSeek API Key
+- DeepSeek API 密钥
 
 ### 安装依赖
+
 ```bash
 npm install
 ```
 
-### 本地开发
-```bash
-# 启动本地开发服务器
-npm run dev
+### 环境配置
+
+在 `wrangler.toml` 中配置环境变量：
+
+```toml
+[env.dev.vars]
+DEEPSEEK_API_KEY = "your-deepseek-api-key"
+
+[env.production.vars]
+DEEPSEEK_API_KEY = "your-deepseek-api-key"
 ```
 
-### 环境变量设置
+或者使用 wrangler secrets：
 
-1. 设置 DeepSeek API Key：
 ```bash
 wrangler secret put DEEPSEEK_API_KEY
 ```
 
-2. 设置允许的跨域来源（可选）：
+### 本地开发
+
 ```bash
-wrangler secret put ALLOWED_ORIGINS
-# 例如: https://your-frontend.com,http://localhost:3000
+npm run dev
 ```
+
+服务将在 `http://localhost:8787` 启动
+
+- REST API: `http://localhost:8787/api/chat`
+- GraphQL Playground: `http://localhost:8787/graphql`
 
 ### 部署
 
 ```bash
-# 部署到生产环境
 npm run deploy
+```
 
-# 或者部署到开发环境
-wrangler deploy --env development
+## 使用示例
+
+### REST API 示例
+
+```javascript
+// 发送聊天消息
+const response = await fetch('https://your-worker.your-subdomain.workers.dev/api/chat', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    message: '你好，请介绍一下你自己',
+    conversationId: 'optional-conversation-id',
+    systemPrompt: '你是一个有帮助的AI助手'
+  })
+});
+
+const result = await response.json();
+console.log(result);
+```
+
+### GraphQL 示例
+
+```javascript
+// 使用 GraphQL 发送消息
+const query = `
+  mutation SendMessage($input: ChatInput!) {
+    sendMessage(input: $input) {
+      message
+      conversationId
+      timestamp
+      conversation {
+        id
+        title
+        messages {
+          content
+          role
+          timestamp
+        }
+      }
+    }
+  }
+`;
+
+const variables = {
+  input: {
+    message: "你好，请介绍一下你自己",
+    systemPrompt: "你是一个有帮助的AI助手"
+  }
+};
+
+const response = await fetch('https://your-worker.your-subdomain.workers.dev/graphql', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    query,
+    variables
+  })
+});
+
+const result = await response.json();
+console.log(result.data.sendMessage);
+```
+
+## 前端集成示例
+
+### React with Apollo Client
+
+```javascript
+import { ApolloClient, InMemoryCache, gql, useMutation } from '@apollo/client';
+
+const client = new ApolloClient({
+  uri: 'https://your-worker.your-subdomain.workers.dev/graphql',
+  cache: new InMemoryCache(),
+});
+
+const SEND_MESSAGE = gql`
+  mutation SendMessage($input: ChatInput!) {
+    sendMessage(input: $input) {
+      message
+      conversationId
+      conversation {
+        messages {
+          content
+          role
+        }
+      }
+    }
+  }
+`;
+
+function ChatComponent() {
+  const [sendMessage, { data, loading, error }] = useMutation(SEND_MESSAGE);
+
+  const handleSendMessage = (message) => {
+    sendMessage({
+      variables: {
+        input: {
+          message,
+          systemPrompt: "你是一个有帮助的AI助手"
+        }
+      }
+    });
+  };
+
+  // 渲染组件...
+}
+```
+
+### Vue.js with Vue Apollo
+
+```javascript
+import { useMutation } from '@vue/apollo-composable';
+import gql from 'graphql-tag';
+
+const SEND_MESSAGE = gql`
+  mutation SendMessage($input: ChatInput!) {
+    sendMessage(input: $input) {
+      message
+      conversationId
+    }
+  }
+`;
+
+export default {
+  setup() {
+    const { mutate: sendMessage, loading, error } = useMutation(SEND_MESSAGE);
+    
+    const handleSendMessage = async (message) => {
+      try {
+        const result = await sendMessage({
+          input: {
+            message,
+            systemPrompt: "你是一个有帮助的AI助手"
+          }
+        });
+        console.log(result.data.sendMessage);
+      } catch (err) {
+        console.error('发送消息失败:', err);
+      }
+    };
+    
+    return {
+      sendMessage: handleSendMessage,
+      loading,
+      error
+    };
+  }
+};
+```
+
+### 使用 fetch 直接调用
+
+```javascript
+class ChatService {
+  constructor(baseUrl) {
+    this.baseUrl = baseUrl;
+  }
+  
+  async sendMessage(message, options = {}) {
+    const query = `
+      mutation SendMessage($input: ChatInput!) {
+        sendMessage(input: $input) {
+          message
+          conversationId
+          timestamp
+          usage {
+            totalTokens
+          }
+          conversation {
+            id
+            messages {
+              content
+              role
+              timestamp
+            }
+          }
+        }
+      }
+    `;
+    
+    const variables = {
+      input: {
+        message,
+        conversationId: options.conversationId,
+        systemPrompt: options.systemPrompt,
+        model: options.model || 'deepseek-chat'
+      }
+    };
+    
+    const response = await fetch(`${this.baseUrl}/graphql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query, variables })
+    });
+    
+    const result = await response.json();
+    
+    if (result.errors) {
+      throw new Error(result.errors[0].message);
+    }
+    
+    return result.data.sendMessage;
+  }
+  
+  async createConversation(title, systemPrompt) {
+    const query = `
+      mutation CreateConversation($input: CreateConversationInput!) {
+        createConversation(input: $input) {
+          id
+          title
+          createdAt
+          systemPrompt
+        }
+      }
+    `;
+    
+    const variables = {
+      input: { title, systemPrompt }
+    };
+    
+    const response = await fetch(`${this.baseUrl}/graphql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query, variables })
+    });
+    
+    const result = await response.json();
+    return result.data.createConversation;
+  }
+  
+  async getConversation(id) {
+    const query = `
+      query GetConversation($id: ID!) {
+        conversation(id: $id) {
+          id
+          title
+          messages {
+            id
+            content
+            role
+            timestamp
+            usage {
+              totalTokens
+            }
+          }
+          createdAt
+          updatedAt
+          systemPrompt
+        }
+      }
+    `;
+    
+    const variables = { id };
+    
+    const response = await fetch(`${this.baseUrl}/graphql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query, variables })
+    });
+    
+    const result = await response.json();
+    return result.data.conversation;
+  }
+}
+
+// 使用示例
+const chatService = new ChatService('https://your-worker.your-subdomain.workers.dev');
+
+// 发送消息
+const response = await chatService.sendMessage('你好，请介绍一下你自己', {
+  systemPrompt: '你是一个有帮助的AI助手'
+});
+console.log('AI回复:', response.message);
+
+// 创建新对话
+const conversation = await chatService.createConversation('技术讨论', '你是一个专业的技术顾问');
+console.log('新对话ID:', conversation.id);
+```
+
+## 错误处理
+
+### GraphQL 错误处理
+
+```javascript
+try {
+  const result = await fetch('/graphql', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, variables })
+  });
+  
+  const data = await result.json();
+  
+  if (data.errors) {
+    // 处理 GraphQL 错误
+    data.errors.forEach(error => {
+      console.error('GraphQL Error:', error.message);
+      console.error('Error Code:', error.extensions?.code);
+    });
+    return;
+  }
+  
+  // 处理成功响应
+  console.log(data.data);
+} catch (error) {
+  // 处理网络错误
+  console.error('Network Error:', error);
+}
 ```
 
 ## 项目结构
 
 ```
 src/
-├── index.ts              # 主入口文件和路由
-├── types/
-│   └── index.ts          # TypeScript 类型定义
-├── services/
-│   └── deepseek.ts       # DeepSeek API 服务
+├── index.ts              # 主入口文件
 ├── middleware/
-│   └── cors.ts           # CORS 中间件
-└── env.d.ts              # 环境变量类型定义
+│   └── cors.ts          # CORS 中间件
+├── services/
+│   └── deepseek.ts      # DeepSeek API 服务
+├── types/
+│   ├── index.ts         # 基础类型定义
+│   └── graphql.ts       # GraphQL 类型定义
+├── graphql/
+│   ├── schema.ts        # GraphQL Schema
+│   ├── typeDefs.ts      # GraphQL 类型定义
+│   ├── resolvers.ts     # GraphQL 解析器
+│   └── context.ts       # GraphQL 上下文
+package.json
+wrangler.toml
+tsconfig.json
 ```
-
-## 技术栈
-
-- **运行环境**: Cloudflare Workers
-- **语言**: TypeScript
-- **路由**: @cloudflare/itty-router
-- **AI模型**: DeepSeek API
-- **构建工具**: Wrangler
-
-## 错误处理
-
-所有错误响应都遵循统一格式：
-```json
-{
-  "error": "错误描述",
-  "code": "ERROR_CODE"
-}
-```
-
-常见错误代码：
-- `INVALID_CONTENT_TYPE`: 请求内容类型无效
-- `INVALID_MESSAGE`: 消息参数无效
-- `MISSING_CONVERSATION_ID`: 缺少对话ID
-- `INTERNAL_ERROR`: 服务器内部错误
-- `NOT_FOUND`: 路由未找到
-
-## 监控和日志
-
-```bash
-# 查看实时日志
-npm run tail
-
-# 或者
-wrangler tail
-```
-
-## 安全注意事项
-
-1. 在生产环境中，请设置具体的 `ALLOWED_ORIGINS` 而不是使用 `*`
-2. 定期轮换 API 密钥
-3. 监控 API 使用量和成本
-4. 考虑添加请求频率限制
-
-## 贡献指南
-
-1. Fork 项目
-2. 创建功能分支
-3. 提交变更
-4. 推送到分支
-5. 创建 Pull Request
 
 ## 许可证
 
