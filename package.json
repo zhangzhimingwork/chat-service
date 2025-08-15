@@ -28,8 +28,6 @@
   },
   "dependencies": {
     "graphql": "^16.8.1",
-    "@apollo/server": "^4.10.0",
-    "@as-integrations/cloudflare-workers": "^1.2.0",
-    "@graphql-tools/schema": "^10.0.2"
+    "graphql-yoga": "^5.1.1"
   }
 }
