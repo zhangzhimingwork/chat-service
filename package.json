@@ -26,8 +26,9 @@
     "wrangler": "^4.28.1"
   },
   "dependencies": {
-    "graphql": "^16.8.1",
-    "graphql-yoga": "^5.1.1",
-    "@graphql-tools/schema": "^10.0.2"
+    "@apollo/server": "^4.11.0",
+    "@as-integrations/cloudflare-workers": "^1.1.1",
+    "graphql": "^16.9.0",
+    "graphql-tag": "^2.12.6"
   }
 }
