@@ -3,6 +3,8 @@
 interface Env {
   // DeepSeek API 密钥
   DEEPSEEK_API_KEY: string;
+
+  OPENAI_API_KEY: string;
   
   // 允许的跨域来源
   ALLOWED_ORIGINS?: string;

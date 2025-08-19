@@ -20,6 +20,7 @@ build/
 # Wrangler
 .wrangler/
 wrangler.toml.bak
+.dev.vars
 
 # Logs
 logs/

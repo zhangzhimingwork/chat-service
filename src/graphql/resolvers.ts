@@ -1,4 +1,5 @@
 import { DeepSeekService } from '../services/deepseek';
+import { OpenAIService } from '../services/openAi'
 import { ChatRequest } from '../types';
 import { GraphQLError } from 'graphql';
 import { GraphQLContext } from './context';
@@ -104,8 +105,16 @@ export const resolvers = {
         console.log(`💬 Processing message: "${messagePreview}" (RequestID: ${context.requestId})`);
 
         // 调用 DeepSeek 服务
-        const deepSeekService = new DeepSeekService(context.env.DEEPSEEK_API_KEY);
-        const response = await deepSeekService.chat({
+        // const deepSeekService = new DeepSeekService(context.env.DEEPSEEK_API_KEY);
+        // const response = await deepSeekService.chat({
+        //   message: input.message.trim(),
+        //   conversationId: input.conversationId,
+        //   systemPrompt: input.systemPrompt
+        // });
+
+        // 调用 openai 服务
+        const openAIService = new OpenAIService(context.env.OPENAI_API_KEY);
+        const response = await openAIService.chat({
           message: input.message.trim(),
           conversationId: input.conversationId,
           systemPrompt: input.systemPrompt

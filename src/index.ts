@@ -1,6 +1,7 @@
 // 修正后的代码
 import { corsHeaders, handleCORS } from './middleware/cors';
-import { DeepSeekService } from './services/deepseek';
+// import { DeepSeekService } from './services/deepseek';
+import { OpenAIService } from './services/openAi'
 import { ChatRequest, ChatResponse, ErrorResponse } from './types';
 
 // Apollo Server 相关
@@ -16,6 +17,7 @@ import { gql } from 'graphql-tag';
 // 🔧 添加：缺失的 Env 接口定义
 interface Env {
   DEEPSEEK_API_KEY: string;
+  OPENAI_API_KEY: string;
   // 添加其他环境变量
   NODE_ENV?: string;
 }
@@ -107,14 +109,16 @@ const resolvers = {
         const requestBody = {
           message: message.trim(),
           ...(conversationId && { conversationId }),
-          ...(systemPrompt && { systemPrompt })
+          ...(systemPrompt && { systemPrompt }),
+          "model":"DeepSeek-R1",
+          "temperature":1.3,
+          "stream": true
         };
 
         // 🔧 关键：构造内部 API 请求
         // 获取当前请求的 origin
         const url = new URL(context.request.url);
         const apiUrl = `${url.protocol}//${url.host}/api/chat`;
-
         // 创建内部请求
         const apiRequest = new Request(apiUrl, {
           method: 'POST',
@@ -269,12 +273,19 @@ async function handleChatAPI(request: Request, env: Env): Promise<Response> {
     return jsonError('Message is required and must be a non-empty string', 'INVALID_MESSAGE', 400);
   }
 
-  if (!env.DEEPSEEK_API_KEY) {
-    return jsonError('DeepSeek API key not configured', 'MISSING_API_KEY', 500);
+  if (!env.OPENAI_API_KEY) {
+    return jsonError('OpenAI API key not configured', 'MISSING_API_KEY', 500);
   }
 
-  const deepSeekService = new DeepSeekService(env.DEEPSEEK_API_KEY);
-  const response = await deepSeekService.chat({
+  // const deepSeekService = new DeepSeekService(env.DEEPSEEK_API_KEY);
+  // const response = await deepSeekService.chat({
+  //   message: body.message.trim(),
+  //   conversationId: body.conversationId,
+  //   systemPrompt: body.systemPrompt
+  // });
+
+  const openAIService = new OpenAIService(env.OPENAI_API_KEY);
+  const response = await openAIService.chat({
     message: body.message.trim(),
     conversationId: body.conversationId,
     systemPrompt: body.systemPrompt
